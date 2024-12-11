@@ -67,5 +67,18 @@ FROM products p
 JOIN categories c USING (category_id)
 GROUP BY c.category_id, c.category_name;
 
--- customer name and the product name such that the quantity of this product bought by the customer in a single order 
---is more than 5 times the average quantity of this product bought in a single order among all customers.
+-- most popular product per country
+WITH country_products AS (
+        SELECT c.country, od.product_id, sum(od.quantity) AS antall
+        FROM customers c
+                JOIN orders o USING (customer_id)
+                JOIN order_details od USING (order_id)
+        GROUP BY c.country, od.product_id
+        ORDER BY c.country, antall DESC
+),
+countries AS (
+        SELECT DISTINCT country FROM customers
+)
+
+SELECT c.country, (SELECT cp.product_id FROM country_products cp WHERE cp.country = c.country LIMIT 1) AS product_id
+FROM countries c;
